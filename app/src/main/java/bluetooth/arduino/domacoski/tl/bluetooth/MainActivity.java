@@ -7,7 +7,6 @@ import android.bluetooth.BluetoothSocket;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -26,7 +25,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-public class MainActivity extends AppCompatActivity implements BluetoothConnect.BluetoohReceiverUpdate{
+public class MainActivity extends AppCompatActivity implements BluetoothConnectService.BluetoohReceiverUpdate{
 
     private Integer ENABLE_BLUETOOTH = 212;
 
@@ -35,8 +34,8 @@ public class MainActivity extends AppCompatActivity implements BluetoothConnect.
     private BluetoothDevice mDevice = null;
     private DeviceSelect mDeviceSelect;
 
-    private BluetoothConnect.BluetoohReceiver mBluetoohReceiver;
-    private BluetoothConnect mConnect;
+    private BluetoothConnectService.BluetoohReceiver mBluetoohReceiver;
+    private BluetoothConnectService mConnect;
 
     private int[] states = {0, 0, 0, 0, 0, 0};
 
@@ -45,7 +44,7 @@ public class MainActivity extends AppCompatActivity implements BluetoothConnect.
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-        mBluetoohReceiver = new BluetoothConnect.BluetoohReceiver(this);
+        mBluetoohReceiver = new BluetoothConnectService.BluetoohReceiver(this);
         IntentFilter filter = new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED);
         registerReceiver(mBluetoohReceiver, filter);
     }
@@ -195,7 +194,7 @@ public class MainActivity extends AppCompatActivity implements BluetoothConnect.
         if(null == mDevice){
             return;
         }
-        mConnect = new BluetoothConnect(mDevice, this);
+        mConnect = new BluetoothConnectService(mDevice, this);
         mConnect.initialize();
     }
     public void enableBluetooh() {
