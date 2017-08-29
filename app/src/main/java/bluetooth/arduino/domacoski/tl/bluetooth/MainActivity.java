@@ -3,10 +3,11 @@ package bluetooth.arduino.domacoski.tl.bluetooth;
 import android.app.Dialog;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
-import android.content.BroadcastReceiver;
+import android.bluetooth.BluetoothSocket;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -20,26 +21,31 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.io.DataOutputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements BluetoothConnect.BluetoohReceiverUpdate{
 
     private Integer ENABLE_BLUETOOTH = 212;
 
     private BluetoothAdapter mBluetoothAdapter;
-    private BluetoohReceiver mBluetoohReceiver;
+
     private BluetoothDevice mDevice = null;
     private DeviceSelect mDeviceSelect;
 
-    private int[] states = {0,0,0,0,0,0};
+    private BluetoothConnect.BluetoohReceiver mBluetoohReceiver;
+    private BluetoothConnect mConnect;
+
+    private int[] states = {0, 0, 0, 0, 0, 0};
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-        mBluetoohReceiver = new BluetoohReceiver();
+        mBluetoohReceiver = new BluetoothConnect.BluetoohReceiver(this);
         IntentFilter filter = new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED);
         registerReceiver(mBluetoohReceiver, filter);
     }
@@ -47,8 +53,11 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        if(null != mBluetoohReceiver){
+        if (null != mBluetoohReceiver) {
             unregisterReceiver(mBluetoohReceiver);
+        }
+        if(mConnect != null){
+            mConnect.finalize();
         }
     }
 
@@ -60,10 +69,10 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onStart() {
         super.onStart();
-        if(!mBluetoothAdapter.isEnabled()){
+        if (!mBluetoothAdapter.isEnabled()) {
             enableBluetooh();
-        }else{
-            if(null == mDevice){
+        } else {
+            if (null == mDevice) {
                 openDeviceSelect();
             }
         }
@@ -72,10 +81,10 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if(requestCode == ENABLE_BLUETOOTH){
-            if(resultCode == RESULT_OK){
+        if (requestCode == ENABLE_BLUETOOTH) {
+            if (resultCode == RESULT_OK) {
                 openDeviceSelect();
-            }else{
+            } else {
                 Toast.makeText(this, "O aplicativo só funciona com o Bluetooth Ligado!", Toast.LENGTH_LONG).show();
                 finish();
             }
@@ -83,6 +92,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void onOff(final View led) {
+
         switch (led.getId()) {
             case R.id.led1: {
                 if (states[0] == 0) {
@@ -145,83 +155,87 @@ public class MainActivity extends AppCompatActivity {
                 break;
             }
         }
+        new SendAction(mDevice, states).start();
     }
 
-    public void openDeviceSelect(){
-        if(null != mDeviceSelect){
-            if(mDeviceSelect.isShowing()){
+    public void openDeviceSelect() {
+        if (null != mDeviceSelect) {
+            if (mDeviceSelect.isShowing()) {
                 return;
             }
             mDeviceSelect = null;
         }
-
         mDeviceSelect = new DeviceSelect(this);
         mDeviceSelect.show();
     }
-    public void closeDeviceSelect(){
-        if(null != mDeviceSelect){
-            if(mDeviceSelect.isShowing()){
+
+    public void closeDeviceSelect() {
+        if (null != mDeviceSelect) {
+            if (mDeviceSelect.isShowing()) {
                 mDeviceSelect.dismiss();
             }
         }
     }
 
-    public void setDevice(final BluetoothDevice mDevice){
+    public void setDevice(final BluetoothDevice mDevice) {
         this.mDevice = mDevice;
         updateUIFromDevice();
     }
 
-    private void updateUIFromDevice(){
-        if(null == mDevice){
+    private void updateUIFromDevice() {
+        if (null == mDevice) {
             setTitle("Nenhum dispositivo");
-        }else{
+        } else {
             setTitle(mDevice.getName());
+            initConnect();
         }
-
     }
 
-    public void enableBluetooh(){
+    private void initConnect(){
+        if(null == mDevice){
+            return;
+        }
+        mConnect = new BluetoothConnect(mDevice, this);
+        mConnect.initialize();
+    }
+    public void enableBluetooh() {
         final Intent turnOn = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
         startActivityForResult(turnOn, ENABLE_BLUETOOTH);
     }
 
-    public class BluetoohReceiver extends BroadcastReceiver {
-        @Override
-        public void onReceive(final Context context, final Intent intent) {
-            final String action = intent.getAction();
-            if (action.equals(BluetoothAdapter.ACTION_STATE_CHANGED)) {
-                final int state = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE,
-                        BluetoothAdapter.ERROR);
-                switch (state) {
-                    case BluetoothAdapter.STATE_OFF:
-                        enableBluetooh();
-                        break;
-                    case BluetoothAdapter.STATE_TURNING_OFF:
-                        setDevice(null);
-                        Toast.makeText(context, "Desligando Bluetooth...", Toast.LENGTH_SHORT).show();
-                        break;
-                    case BluetoothAdapter.STATE_ON:
-                        Toast.makeText(context, "Bluetooth online!", Toast.LENGTH_SHORT).show();
-                        break;
-                    case BluetoothAdapter.STATE_TURNING_ON:
-                        Toast.makeText(context, "Aguarde...", Toast.LENGTH_SHORT).show();
-                        break;
-                }
-            }
-        }
+    @Override
+    public void stateOff() {
+
     }
 
-    class DeviceSelect extends Dialog{
+    @Override
+    public void stateTurningOff() {
+
+    }
+
+    @Override
+    public void stateOn() {
+
+    }
+
+    @Override
+    public void stateTurningOn() {
+
+    }
+
+
+    class DeviceSelect extends Dialog {
         public DeviceSelect(@NonNull Context context) {
             super(context);
         }
+
         @Override
         protected void onCreate(Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
             requestWindowFeature(Window.FEATURE_NO_TITLE); //before
             setContentView(R.layout.dialog_device);
             final List<BluetoothDevice> devices = new ArrayList<>();
-            for(final BluetoothDevice d : mBluetoothAdapter.getBondedDevices()){
+            for (final BluetoothDevice d : mBluetoothAdapter.getBondedDevices()) {
                 devices.add(d);
             }
             final AdapterDevice adapterDevice = new AdapterDevice(getBaseContext(), devices);
@@ -229,19 +243,23 @@ public class MainActivity extends AppCompatActivity {
             deviceList.setAdapter(adapterDevice);
         }
     }
-    class AdapterDevice extends ArrayAdapter<BluetoothDevice>{
+
+    class AdapterDevice extends ArrayAdapter<BluetoothDevice> {
         private final List<BluetoothDevice> devices;
         private final LayoutInflater inflater;
-        public AdapterDevice(final Context context, final List<BluetoothDevice> devices){
+
+        public AdapterDevice(final Context context, final List<BluetoothDevice> devices) {
             super(context, 0);
             this.devices = devices;
             this.inflater = LayoutInflater.class.cast(context.getSystemService(LAYOUT_INFLATER_SERVICE));
         }
+
         @Nullable
         @Override
         public BluetoothDevice getItem(int position) {
             return devices.get(position);
         }
+
         @NonNull
         @Override
         public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
@@ -249,13 +267,13 @@ public class MainActivity extends AppCompatActivity {
             final BluetoothDevice device = getItem(position);
             TextView.class.cast(view.findViewById(R.id.name)).setText(device.getName());
             String uuid = ". . .";
-            if(device.getUuids() != null){
-                if(null != device.getUuids()[0]){
+            if (device.getUuids() != null) {
+                if (null != device.getUuids()[0]) {
                     uuid = device.getUuids()[0].getUuid().toString();
                 }
             }
             TextView.class.cast(view.findViewById(R.id.description)).setText(uuid);
-            view.setOnClickListener(new View.OnClickListener(){
+            view.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
                     setDevice(device);
@@ -264,11 +282,58 @@ public class MainActivity extends AppCompatActivity {
             });
             return view;
         }
+
         @Override
         public int getCount() {
             return devices.size();
         }
     }
 
+
+
+    class SendAction extends Thread {
+
+        final BluetoothDevice _device;
+        private DataOutputStream os;
+        int[] mValues;
+
+        public SendAction(final BluetoothDevice mDevice, int[] values) {
+            this._device = mDevice;
+            this.mValues = values;
+        }
+
+        @Override
+        public void run() {
+            final StringBuffer buffer = new StringBuffer();
+            for (int i : mValues) {
+                buffer.append(i);
+            }
+
+            try {
+                UUID _id = null;
+                if (_device.getUuids() != null) {
+                    if (null != _device.getUuids()[0]) {
+                        _id = _device.getUuids()[0].getUuid();
+                    }
+                }
+                final BluetoothSocket mSocket = _device.createInsecureRfcommSocketToServiceRecord(_id);
+                mSocket.connect();
+                os = new DataOutputStream(mSocket.getOutputStream());
+                os.writeBytes(buffer.toString());
+                os.flush();
+
+            } catch (final Exception e1) {
+                e1.printStackTrace();
+            } finally {
+                if (null != os) {
+                    try {
+                        os.close();
+                    } catch (final Exception e2) {
+                        e2.printStackTrace();
+                    }
+                }
+            }
+        }
+    }
 
 }
