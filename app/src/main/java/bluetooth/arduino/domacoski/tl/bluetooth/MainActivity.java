@@ -32,6 +32,8 @@ public class MainActivity extends AppCompatActivity {
     private BluetoothDevice mDevice = null;
     private DeviceSelect mDeviceSelect;
 
+    private int[] states = {0,0,0,0,0,0};
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -76,6 +78,71 @@ public class MainActivity extends AppCompatActivity {
             }else{
                 Toast.makeText(this, "O aplicativo só funciona com o Bluetooth Ligado!", Toast.LENGTH_LONG).show();
                 finish();
+            }
+        }
+    }
+
+    public void onOff(final View led) {
+        switch (led.getId()) {
+            case R.id.led1: {
+                if (states[0] == 0) {
+                    states[0] = 1;
+                    led.setBackgroundResource(R.drawable.ic_led_on);
+                } else {
+                    states[0] = 0;
+                    led.setBackgroundResource(R.drawable.ic_led_off);
+                }
+                break;
+            }
+            case R.id.led2: {
+                if (states[1] == 0) {
+                    states[1] = 1;
+                    led.setBackgroundResource(R.drawable.ic_led_on);
+                } else {
+                    states[1] = 0;
+                    led.setBackgroundResource(R.drawable.ic_led_off);
+                }
+                break;
+            }
+            case R.id.led3: {
+                if (states[2] == 0) {
+                    states[2] = 1;
+                    led.setBackgroundResource(R.drawable.ic_led_on);
+                } else {
+                    states[2] = 0;
+                    led.setBackgroundResource(R.drawable.ic_led_off);
+                }
+                break;
+            }
+            case R.id.led4: {
+                if (states[3] == 0) {
+                    states[3] = 1;
+                    led.setBackgroundResource(R.drawable.ic_led_on);
+                } else {
+                    states[3] = 0;
+                    led.setBackgroundResource(R.drawable.ic_led_off);
+                }
+                break;
+            }
+            case R.id.led5: {
+                if (states[4] == 0) {
+                    states[4] = 1;
+                    led.setBackgroundResource(R.drawable.ic_led_on);
+                } else {
+                    states[4] = 0;
+                    led.setBackgroundResource(R.drawable.ic_led_off);
+                }
+                break;
+            }
+            case R.id.led6: {
+                if (states[5] == 0) {
+                    states[5] = 1;
+                    led.setBackgroundResource(R.drawable.ic_led_on);
+                } else {
+                    states[5] = 0;
+                    led.setBackgroundResource(R.drawable.ic_led_off);
+                }
+                break;
             }
         }
     }
