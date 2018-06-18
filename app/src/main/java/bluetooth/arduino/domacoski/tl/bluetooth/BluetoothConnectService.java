@@ -67,6 +67,8 @@ public class BluetoothConnectService {
             synchronized (this){
                 this.mAlive = alive;
             }
+
+
         }
     }
 
