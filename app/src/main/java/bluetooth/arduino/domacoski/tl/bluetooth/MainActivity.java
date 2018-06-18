@@ -53,10 +53,14 @@ public class MainActivity extends AppCompatActivity implements BluetoothConnectS
     protected void onDestroy() {
         super.onDestroy();
         if (null != mBluetoohReceiver) {
+
             unregisterReceiver(mBluetoohReceiver);
+
         }
         if(mConnect != null){
+
             mConnect.finalize();
+
         }
     }
 
