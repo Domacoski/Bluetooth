@@ -43,9 +43,13 @@ public class MainActivity extends Activity implements BluetoothConnectService.Bl
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
         mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+
         mBluetoohReceiver = new BluetoothConnectService.BluetoohReceiver(this);
+
         IntentFilter filter = new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED);
+
         registerReceiver(mBluetoohReceiver, filter);
     }
 
@@ -223,7 +227,8 @@ public class MainActivity extends Activity implements BluetoothConnectService.Bl
     }
 
 
-    class DeviceSelect extends Dialog {
+    class DeviceSelect extends Dialog
+
         public DeviceSelect(@NonNull Context context) {
             super(context);
         }
