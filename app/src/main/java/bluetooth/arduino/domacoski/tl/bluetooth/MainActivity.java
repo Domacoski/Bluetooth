@@ -1,5 +1,6 @@
 package bluetooth.arduino.domacoski.tl.bluetooth;
 
+import android.app.Activity;
 import android.app.Dialog;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
@@ -25,7 +26,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-public class MainActivity extends AppCompatActivity implements BluetoothConnectService.BluetoohReceiverUpdate{
+public class MainActivity extends Activity implements BluetoothConnectService.BluetoohReceiverUpdate{
 
     private Integer ENABLE_BLUETOOTH = 212;
 
